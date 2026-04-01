@@ -1,4 +1,4 @@
-aapiVersion: v1
+apiVersion: v1
 kind: Namespace
 metadata:
   name: weighttracker
@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
       - name: weighttracker
-        image: ghcr.io/mitchfen/weightTracker:latest
+        image: ghcr.io/mitchfen/weight-tracker:latest
         ports:
         - containerPort: 8080
           name: http

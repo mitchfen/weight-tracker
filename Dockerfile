@@ -15,7 +15,8 @@ RUN apk --no-cache add ca-certificates sqlite-libs
 
 WORKDIR /app
 COPY --from=builder /app/server .
-COPY src/templates/ src/static/ ./
+COPY --from=builder /app/templates ./templates
+COPY --from=builder /app/static ./static
 
 EXPOSE 8080
 
