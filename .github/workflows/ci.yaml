@@ -24,6 +24,3 @@ jobs:
 
     - name: Build
       run: go build -v -o server ./src
-
-    - name: Verify binary
-      run: file server && ./server --help 2>&1 || true
