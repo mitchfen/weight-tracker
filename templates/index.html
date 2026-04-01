@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight Tracker</title>
+    <script src="https://unpkg.com/chart.js"></script>
+    <script src="https://unpkg.com/htmx.org"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .chart-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        canvas {
+            max-height: 350px;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚖️ Weight Tracker</h1>
+
+        <div class="form-section">
+            <div id="message-container"></div>
+            <form hx-post="/api/weight" hx-swap="none">
+                <div class="form-group">
+                    <div style="flex: 1;">
+                        <label for="weight">Today's Weight (kg)</label>
+                        <input type="number" id="weight" name="weight" step="0.1" min="0" placeholder="Enter weight..." required>
+                    </div>
+                    <button type="submit" hx-indicator="#loading">Record</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="chart-section">
+            <canvas id="weightChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+
+        async function loadChart() {
+            try {
+                const response = await fetch('/api/weights');
+                const weights = await response.json();
+
+                if (!weights || weights.length === 0) {
+                    document.querySelector('.chart-section').innerHTML = '<div class="loading">No weight data yet. Record your first weight!</div>';
+                    return;
+                }
+
+                const labels = weights.map(w => new Date(w.recorded_at).toLocaleDateString());
+                const data = weights.map(w => w.weight);
+
+                const ctx = document.getElementById('weightChart').getContext('2d');
+                
+                if (chart) {
+                    chart.destroy();
+                }
+
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Weight (kg)',
+                            data: data,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#667eea',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toFixed(1) + ' kg';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load chart:', error);
+            }
+        }
+
+        // Load chart on page load
+        document.addEventListener('DOMContentLoaded', loadChart);
+
+        // Reload chart on form submission
+        document.querySelector('form').addEventListener('htmx:afterRequest', function(event) {
+            const messageContainer = document.getElementById('message-container');
+            
+            if (event.detail.xhr.status === 200) {
+                messageContainer.innerHTML = '<div class="message success">✓ Weight recorded successfully!</div>';
+                document.getElementById('weight').value = '';
+                setTimeout(() => {
+                    messageContainer.innerHTML = '';
+                    loadChart();
+                }, 1500);
+            } else {
+                messageContainer.innerHTML = '<div class="message error">✗ Failed to record weight</div>';
+                setTimeout(() => {
+                    messageContainer.innerHTML = '';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
