@@ -18,7 +18,7 @@ jobs:
     name: Build and publish
     runs-on: ubuntu-latest
     env:
-      imageName: ghcr.io/mitchfen/weightTracker:latest
+      imageName: ghcr.io/mitchfen/weight-tracker:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
