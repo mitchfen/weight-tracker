@@ -38,7 +38,7 @@ func main() {
 }
 
 func initDB() (*sql.DB, error) {
-	dbPath := "weights.db"
+	dbPath := "/data/weights.db"
 	database, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
