@@ -2,10 +2,14 @@ package main
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -14,8 +18,8 @@ import (
 var db *sql.DB
 
 type Weight struct {
-	ID        int       `json:"id"`
-	Weight    float64   `json:"weight"`
+	ID         int       `json:"id"`
+	Weight     float64   `json:"weight"`
 	RecordedAt time.Time `json:"recorded_at"`
 }
 
@@ -30,6 +34,8 @@ func main() {
 	http.HandleFunc("/", serveIndex)
 	http.HandleFunc("/api/weight", handleWeight)
 	http.HandleFunc("/api/weights", handleWeights)
+	http.HandleFunc("/api/weights/export", handleExport)
+	http.HandleFunc("/api/weights/import", handleImport)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	port := ":8080"
@@ -38,7 +44,10 @@ func main() {
 }
 
 func initDB() (*sql.DB, error) {
-	dbPath := "/data/weights.db"
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "weights.db"
+	}
 	database, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
@@ -134,4 +143,79 @@ func handleWeights(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(weights)
+}
+
+func handleExport(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.Query("SELECT weight, recorded_date FROM weights ORDER BY recorded_date")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch weights: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment; filename=weights.csv")
+
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	writer.Write([]string{"date", "weight"})
+	for rows.Next() {
+		var weight float64
+		var date string
+		if err := rows.Scan(&weight, &date); err != nil {
+			continue
+		}
+		writer.Write([]string{date, strconv.FormatFloat(weight, 'f', 1, 64)})
+	}
+}
+
+func handleImport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	r.ParseMultipartForm(1 << 20) // 1MB max
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Failed to read file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	// Skip header row
+	if _, err := reader.Read(); err != nil {
+		http.Error(w, "Failed to read CSV header", http.StatusBadRequest)
+		return
+	}
+
+	imported := 0
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil || len(record) < 2 {
+			continue
+		}
+
+		date := record[0]
+		weight, err := strconv.ParseFloat(record[1], 64)
+		if err != nil {
+			continue
+		}
+
+		_, err = db.Exec(
+			"INSERT INTO weights (weight, recorded_date) VALUES (?, ?) ON CONFLICT(recorded_date) DO UPDATE SET weight=excluded.weight",
+			weight, date,
+		)
+		if err == nil {
+			imported++
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"status": "success", "imported": imported})
 }

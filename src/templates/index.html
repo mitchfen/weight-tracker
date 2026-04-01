@@ -24,6 +24,13 @@
                     <button type="submit" hx-indicator="#loading">Record</button>
                 </div>
             </form>
+            <div class="csv-actions">
+                <a href="/api/weights/export" class="btn-secondary">Export CSV</a>
+                <form id="import-form" enctype="multipart/form-data">
+                    <label for="csv-file" class="btn-secondary" style="cursor:pointer;">Import CSV</label>
+                    <input type="file" id="csv-file" name="file" accept=".csv" style="display:none;" onchange="importCSV(this)">
+                </form>
+            </div>
         </div>
 
         <div class="chart-section">
@@ -144,6 +151,23 @@
                 }, 3000);
             }
         });
+
+        async function importCSV(input) {
+            const messageContainer = document.getElementById('message-container');
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+
+            try {
+                const response = await fetch('/api/weights/import', { method: 'POST', body: formData });
+                const result = await response.json();
+                messageContainer.innerHTML = `<div class="message success">✓ Imported ${result.imported} records</div>`;
+                input.value = '';
+                setTimeout(() => { messageContainer.innerHTML = ''; loadChart(); }, 1500);
+            } catch (error) {
+                messageContainer.innerHTML = '<div class="message error">✗ Failed to import CSV</div>';
+                setTimeout(() => { messageContainer.innerHTML = ''; }, 3000);
+            }
+        }
     </script>
 </body>
 </html>

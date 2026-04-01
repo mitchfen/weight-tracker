@@ -118,6 +118,31 @@ canvas {
     color: #721c24;
 }
 
+.csv-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-secondary {
+    padding: 8px 16px;
+    background: white;
+    color: #00bfff;
+    border: 2px solid #00bfff;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: background 0.3s, color 0.3s;
+    display: inline-block;
+}
+
+.btn-secondary:hover {
+    background: #00bfff;
+    color: white;
+}
+
 .loading {
     text-align: center;
     color: #999;

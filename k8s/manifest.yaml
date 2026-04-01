@@ -36,6 +36,9 @@ spec:
         ports:
         - containerPort: 8080
           name: http
+        env:
+        - name: DB_PATH
+          value: /data/weights.db
         volumeMounts:
         - name: db
           mountPath: /data
