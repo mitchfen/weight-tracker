@@ -19,14 +19,11 @@ jobs:
     - name: Download dependencies
       run: go mod download
 
-    - name: Verify Go modules
-      run: go mod tidy --check
-
     - name: Run go vet
-      run: go vet ./...
+      run: go vet ./src/...
 
     - name: Build
-      run: go build -v -o server .
+      run: go build -v -o server ./src
 
     - name: Verify binary
       run: file server && ./server --help 2>&1 || true

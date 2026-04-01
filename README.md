@@ -8,9 +8,9 @@ A simple weight tracking app with a visualization showing daily weight and 7-day
 
 ## Features
 
-- Record daily weight entries
-- View weight history on an interactive chart
-- See trend analysis with EMA smoothing
+- Record daily weight
+- Weight history visualization
+- Weight trend analysis with exponential moving average (EMA) smoothing
 - Persistent SQLite database
 
 ## Running Locally
@@ -22,7 +22,7 @@ go run main.go
 Visit `http://localhost:8080`
 
 ## Kubernetes
-
+I use these manifests to deploy to my home k3s cluster:
 ```bash
 kubectl apply -f k8s/manifest.yaml
 ```
