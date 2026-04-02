@@ -98,6 +98,11 @@ button:disabled {
     justify-content: center;
 }
 
+.history-toggle {
+    align-self: flex-end;
+    margin-bottom: 12px;
+}
+
 canvas {
     max-height: 350px;
 }
@@ -185,6 +190,11 @@ canvas {
     .chart-section {
         padding: 15px;
         min-height: 250px;
+    }
+
+    .history-toggle {
+        align-self: stretch;
+        margin-bottom: 10px;
     }
 
     canvas {
