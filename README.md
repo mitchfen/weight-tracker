@@ -11,30 +11,39 @@ A simple weight tracking app with a visualization showing daily weight and 7-day
 - Record daily weight
 - Weight history visualization
 - Weight trend analysis with exponential moving average (EMA) smoothing
+- CSV export and import
 - Persistent SQLite database
 
 ## Running Locally
 
 ```bash
-go run main.go
+cd src
+go run .
 ```
 
 Visit `http://localhost:8080`
 
+## Docker
+
+```bash
+docker build -t weight-tracker .
+docker run -p 8080:8080 weight-tracker
+```
+
 ## Kubernetes
+
 I use these manifests to deploy to my home k3s cluster:
+
 ```bash
 kubectl apply -f k8s/manifest.yaml
 ```
 
-## Test Data
+## Configuration
 
-Generate 50 days of semi-realistic test weight data:
-
-```bash
-python3 test/populate_weights.py
-```
+| Environment Variable | Default      | Description                  |
+|----------------------|--------------|------------------------------|
+| `DB_PATH`            | `weights.db` | Path to the SQLite database file |
 
 ## Database
 
-Weight data is stored in `weights.db` (SQLite). See `test/README.md` for test utilities.
+Weight data is stored in a SQLite database (`weights.db` by default). Data can be exported or imported as CSV via the app UI.
