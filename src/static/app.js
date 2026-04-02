@@ -1,0 +1,200 @@
+let chart = null;
+let allWeights = [];
+let isShowingAllMobileHistory = false;
+
+const MOBILE_BREAKPOINT = 600;
+const MOBILE_HISTORY_LIMIT = 30;
+
+function isMobileViewport() {
+    return window.innerWidth <= MOBILE_BREAKPOINT;
+}
+
+function getDisplayWeights() {
+    if (!isMobileViewport() || isShowingAllMobileHistory || allWeights.length <= MOBILE_HISTORY_LIMIT) {
+        return allWeights;
+    }
+    return allWeights.slice(-MOBILE_HISTORY_LIMIT);
+}
+
+function updateHistoryToggle() {
+    const toggle = document.getElementById('history-toggle');
+    if (!toggle) return;
+
+    if (isMobileViewport() && allWeights.length > MOBILE_HISTORY_LIMIT) {
+        toggle.style.display = 'inline-block';
+        toggle.textContent = isShowingAllMobileHistory
+            ? 'Show Recent 30 Days'
+            : 'Show Full History';
+    } else {
+        toggle.style.display = 'none';
+    }
+}
+
+function toggleMobileHistory() {
+    isShowingAllMobileHistory = !isShowingAllMobileHistory;
+    renderChart();
+}
+
+function calculateExponentialMovingAverage(data, period = 7) {
+    if (data.length === 0) return [];
+    
+    const multiplier = 2 / (period + 1);
+    const ema = [data[0]];
+    
+    for (let i = 1; i < data.length; i++) {
+        ema.push(data[i] * multiplier + ema[i - 1] * (1 - multiplier));
+    }
+    
+    return ema;
+}
+
+function renderChart() {
+    const weights = getDisplayWeights();
+    const emptyState = document.getElementById('chart-empty-state');
+    const canvas = document.getElementById('weightChart');
+    const toggle = document.getElementById('history-toggle');
+
+    if (!weights || weights.length === 0) {
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
+        if (emptyState) emptyState.style.display = 'block';
+        if (canvas) canvas.style.display = 'none';
+        if (toggle) toggle.style.display = 'none';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+    if (canvas) canvas.style.display = 'block';
+
+    const labels = weights.map(w => new Date(w.recorded_at).toLocaleDateString());
+    const data = weights.map(w => w.weight);
+    const emaData = calculateExponentialMovingAverage(data);
+
+    const ctx = document.getElementById('weightChart').getContext('2d');
+
+    if (chart) {
+        chart.destroy();
+    }
+
+    const mobileViewport = isMobileViewport();
+
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Weight (lbs)',
+                data: data,
+                borderColor: '#00bfff',
+                backgroundColor: 'rgba(0, 191, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.1,
+                pointRadius: mobileViewport ? 2 : 5,
+                pointBackgroundColor: '#00bfff',
+                pointBorderColor: '#fff',
+                pointBorderWidth: mobileViewport ? 1 : 2,
+                pointHoverRadius: mobileViewport ? 4 : 7
+            }, {
+                label: 'Trend (7-day EMA)',
+                data: emaData,
+                borderColor: '#ff6600',
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                borderDash: [5, 5],
+                fill: false,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        boxWidth: mobileViewport ? 10 : 40,
+                        usePointStyle: mobileViewport
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        maxTicksLimit: mobileViewport ? 5 : 12,
+                        maxRotation: mobileViewport ? 0 : 45
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(1) + ' lbs';
+                        },
+                        maxTicksLimit: mobileViewport ? 6 : 10
+                    }
+                }
+            }
+        }
+    });
+
+    updateHistoryToggle();
+}
+
+async function loadChart() {
+    try {
+        const response = await fetch('/api/weights');
+        allWeights = await response.json();
+        renderChart();
+    } catch (error) {
+        console.error('Failed to load chart:', error);
+    }
+}
+
+window.addEventListener('resize', renderChart);
+
+// Load chart on page load
+document.addEventListener('DOMContentLoaded', loadChart);
+
+// Reload chart on form submission
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('form').addEventListener('htmx:afterRequest', function(event) {
+        const messageContainer = document.getElementById('message-container');
+        
+        if (event.detail.xhr.status === 200) {
+            messageContainer.innerHTML = '<div class="message success">✓ Weight recorded successfully!</div>';
+            document.getElementById('weight').value = '';
+            setTimeout(() => {
+                messageContainer.innerHTML = '';
+                loadChart();
+            }, 1500);
+        } else {
+            messageContainer.innerHTML = '<div class="message error">✗ Failed to record weight</div>';
+            setTimeout(() => {
+                messageContainer.innerHTML = '';
+            }, 3000);
+        }
+    });
+});
+
+async function importCSV(input) {
+    const messageContainer = document.getElementById('message-container');
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
+
+    try {
+        const response = await fetch('/api/weights/import', { method: 'POST', body: formData });
+        const result = await response.json();
+        messageContainer.innerHTML = `<div class="message success">✓ Imported ${result.imported} records</div>`;
+        input.value = '';
+        setTimeout(() => { messageContainer.innerHTML = ''; loadChart(); }, 1500);
+    } catch (error) {
+        messageContainer.innerHTML = '<div class="message error">✗ Failed to import CSV</div>';
+        setTimeout(() => { messageContainer.innerHTML = ''; }, 3000);
+    }
+}
