@@ -139,7 +139,6 @@ canvas {
     font-size: 0.9em;
     transition: background 0.3s, color 0.3s;
     display: inline-block;
-    box-sizing: border-box;
     line-height: 1.5;
 }
 
@@ -157,7 +156,6 @@ canvas {
 @media (max-width: 600px) {
     body {
         padding: 12px;
-        align-items: flex-start;
     }
 
     .container {
