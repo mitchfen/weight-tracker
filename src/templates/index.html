@@ -19,22 +19,21 @@
                 <div class="form-group">
                     <div style="flex: 1;">
                         <label for="weight">Today's Weight (lbs)</label>
-                        <input type="number" id="weight" name="weight" step="0.1" min="0" placeholder="Enter weight..." required>
+                        <input type="number" id="weight" name="weight" step="0.1" min="0" placeholder="Enter today's weight..." required>
                     </div>
                     <button type="submit" hx-indicator="#loading">Record</button>
                 </div>
             </form>
-            <div class="csv-actions">
-                <a href="/api/weights/export" class="btn-secondary">Export CSV</a>
-                <form id="import-form" enctype="multipart/form-data">
-                    <label for="csv-file" class="btn-secondary" style="cursor:pointer;">Import CSV</label>
-                    <input type="file" id="csv-file" name="file" accept=".csv" style="display:none;" onchange="importCSV(this)">
-                </form>
-            </div>
         </div>
 
         <div class="chart-section">
             <canvas id="weightChart"></canvas>
+        </div>
+
+        <div class="csv-actions">
+            <a href="/api/weights/export" class="btn-secondary">Export CSV</a>
+            <label for="csv-file" class="btn-secondary" style="cursor:pointer;">Import CSV</label>
+            <input type="file" id="csv-file" name="file" accept=".csv" style="display:none;" onchange="importCSV(this)">
         </div>
     </div>
 
@@ -94,7 +93,7 @@
                         }, {
                             label: 'Trend (7-day EMA)',
                             data: emaData,
-                            borderColor: '#0088aa',
+                            borderColor: '#ff6600',
                             backgroundColor: 'transparent',
                             borderWidth: 3,
                             borderDash: [5, 5],

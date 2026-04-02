@@ -191,6 +191,12 @@ func handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Wipe existing data before importing
+	if _, err := db.Exec("DELETE FROM weights"); err != nil {
+		http.Error(w, "Failed to clear existing data", http.StatusInternalServerError)
+		return
+	}
+
 	imported := 0
 	for {
 		record, err := reader.Read()
@@ -208,8 +214,8 @@ func handleImport(w http.ResponseWriter, r *http.Request) {
 		}
 
 		_, err = db.Exec(
-			"INSERT INTO weights (weight, recorded_date) VALUES (?, ?) ON CONFLICT(recorded_date) DO UPDATE SET weight=excluded.weight",
-			weight, date,
+			"INSERT INTO weights (weight, recorded_date, recorded_at) VALUES (?, ?, ?) ON CONFLICT(recorded_date) DO UPDATE SET weight=excluded.weight",
+			weight, date, date,
 		)
 		if err == nil {
 			imported++
