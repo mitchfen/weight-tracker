@@ -1,4 +1,4 @@
-module weighttracker
+module github.com/mitchfen/weight-tracker
 
 go 1.26
 
