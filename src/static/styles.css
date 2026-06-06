@@ -1,110 +1,18 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #d9f2ff 0%, #c6ecff 100%);
-    min-height: 100vh;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-}
-
-.container {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 800px;
-    width: 100%;
-    padding: 40px;
-}
-
-h1 {
-    color: #333;
-    margin-bottom: 30px;
-    text-align: center;
-    font-size: 2.5em;
-}
-
-.form-section {
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-}
-
-.form-group {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-}
-
-label {
-    display: block;
-    color: #555;
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 0.9em;
-}
-
-input[type="number"] {
-    flex: 1;
-    padding: 12px;
-    border: 2px solid #ddd;
-    border-radius: 6px;
-    font-size: 1em;
-    transition: border-color 0.3s;
-    width: 100%;
-}
-
-input[type="number"]:focus {
-    outline: none;
-    border-color: #00bfff;
-}
-
-button {
-    padding: 12px 24px;
-    background: #00bfff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-    font-size: 1em;
-    white-space: nowrap;
-}
-
-button:hover {
-    background: #0099cc;
-}
-
-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
-
-.chart-section {
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 8px;
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.history-toggle {
-    align-self: flex-end;
-    margin-bottom: 12px;
-}
+/* Custom styles for dynamically generated and chart elements */
 
 canvas {
     max-height: 350px;
+}
+
+@media (max-width: 640px) {
+    canvas {
+        max-height: 250px;
+    }
+
+    #history-toggle {
+        align-self: stretch;
+        text-align: center;
+    }
 }
 
 .message {
@@ -116,96 +24,38 @@ canvas {
 }
 
 .message.success {
-    background: #d4edda;
-    color: #155724;
+    background: #dcfce7; /* green-100 */
+    color: #166534;      /* green-800 */
 }
 
 .message.error {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.csv-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-    flex-wrap: wrap;
+    background: #fee2e2; /* red-100 */
+    color: #991b1b;      /* red-800 */
 }
 
 .btn-secondary {
     padding: 8px 16px;
     background: white;
-    color: #00bfff;
-    border: 2px solid #00bfff;
+    color: #475569;           /* slate-600 */
+    border: 2px solid #94a3b8; /* slate-400 */
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
     font-size: 0.9em;
-    transition: background 0.3s, color 0.3s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
     display: inline-block;
     line-height: 1.5;
 }
 
 .btn-secondary:hover {
-    background: #00bfff;
+    background: #334155; /* slate-700 */
     color: white;
+    border-color: #334155;
 }
 
 .loading {
     text-align: center;
-    color: #999;
+    color: #94a3b8; /* slate-400 */
     font-style: italic;
-}
-
-@media (max-width: 600px) {
-    body {
-        padding: 12px;
-    }
-
-    .container {
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    h1 {
-        font-size: 1.8em;
-        margin-bottom: 20px;
-    }
-
-    .form-section {
-        padding: 15px;
-    }
-
-    .form-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    button {
-        width: 100%;
-    }
-
-    .chart-section {
-        padding: 15px;
-        min-height: 250px;
-    }
-
-    .history-toggle {
-        align-self: stretch;
-        margin-bottom: 10px;
-    }
-
-    canvas {
-        max-height: 250px;
-    }
-
-    .csv-actions {
-        flex-direction: column;
-    }
-
-    .btn-secondary {
-        text-align: center;
-    }
 }
