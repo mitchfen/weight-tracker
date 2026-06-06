@@ -87,24 +87,24 @@ function renderChart() {
             datasets: [{
                 label: 'Weight (lbs)',
                 data: data,
-                borderColor: '#00bfff',
-                backgroundColor: 'rgba(0, 191, 255, 0.1)',
+                borderColor: '#94a3b8',
+                backgroundColor: 'transparent',
                 borderWidth: 2,
-                fill: true,
+                borderDash: [5, 5],
+                fill: false,
                 tension: 0.1,
                 pointRadius: mobileViewport ? 2 : 5,
-                pointBackgroundColor: '#00bfff',
+                pointBackgroundColor: '#94a3b8',
                 pointBorderColor: '#fff',
                 pointBorderWidth: mobileViewport ? 1 : 2,
                 pointHoverRadius: mobileViewport ? 4 : 7
             }, {
                 label: 'Trend (7-day EMA)',
                 data: emaData,
-                borderColor: '#ff6600',
-                backgroundColor: 'transparent',
+                borderColor: '#475569',
+                backgroundColor: 'rgba(71, 85, 105, 0.08)',
                 borderWidth: 3,
-                borderDash: [5, 5],
-                fill: false,
+                fill: true,
                 tension: 0.3,
                 pointRadius: 0,
                 pointHoverRadius: 0
@@ -131,7 +131,8 @@ function renderChart() {
                     }
                 },
                 y: {
-                    beginAtZero: false,
+                    min: Math.floor(Math.min(...data) - 1),
+                    max: Math.ceil(Math.max(...data) + 1),
                     ticks: {
                         callback: function(value) {
                             return value.toFixed(1) + ' lbs';
