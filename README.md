@@ -3,8 +3,8 @@
 A simple weight tracking app I vibecoded.  
 I host this on my home k3s cluster and use it every day instead of a proprietary app.
 
-## Screenshot (randomly generated data)
-
+## Screenshot
+Randomly generated psuedo-realistic data:
 ![Weight Tracker Dashboard](screenshot.png)
 
 ## Features

@@ -1,28 +1,28 @@
 let chart = null;
 let allWeights = [];
-let isShowingAllMobileHistory = false;
+let isShowingAllHistory = false;
 
 const MOBILE_BREAKPOINT = 600;
-const MOBILE_HISTORY_LIMIT = 30;
+const HISTORY_LIMIT = 30;
 
 function isMobileViewport() {
     return window.innerWidth <= MOBILE_BREAKPOINT;
 }
 
 function getDisplayWeights() {
-    if (!isMobileViewport() || isShowingAllMobileHistory || allWeights.length <= MOBILE_HISTORY_LIMIT) {
+    if (isShowingAllHistory || allWeights.length <= HISTORY_LIMIT) {
         return allWeights;
     }
-    return allWeights.slice(-MOBILE_HISTORY_LIMIT);
+    return allWeights.slice(-HISTORY_LIMIT);
 }
 
 function updateHistoryToggle() {
     const toggle = document.getElementById('history-toggle');
     if (!toggle) return;
 
-    if (isMobileViewport() && allWeights.length > MOBILE_HISTORY_LIMIT) {
+    if (allWeights.length > HISTORY_LIMIT) {
         toggle.style.display = 'inline-block';
-        toggle.textContent = isShowingAllMobileHistory
+        toggle.textContent = isShowingAllHistory
             ? 'Show Recent 30 Days'
             : 'Show Full History';
     } else {
@@ -30,8 +30,8 @@ function updateHistoryToggle() {
     }
 }
 
-function toggleMobileHistory() {
-    isShowingAllMobileHistory = !isShowingAllMobileHistory;
+function toggleHistory() {
+    isShowingAllHistory = !isShowingAllHistory;
     renderChart();
 }
 
@@ -68,9 +68,16 @@ function renderChart() {
     if (emptyState) emptyState.style.display = 'none';
     if (canvas) canvas.style.display = 'block';
 
+    const allData = allWeights.map(w => w.weight);
+    const allEmaData = calculateExponentialMovingAverage(allData);
+
     const labels = weights.map(w => new Date(w.recorded_at).toLocaleDateString());
     const data = weights.map(w => w.weight);
-    const emaData = calculateExponentialMovingAverage(data);
+    
+    let emaData = allEmaData;
+    if (!isShowingAllHistory && allWeights.length > HISTORY_LIMIT) {
+        emaData = allEmaData.slice(-HISTORY_LIMIT);
+    }
 
     const ctx = document.getElementById('weightChart').getContext('2d');
 
