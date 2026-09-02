@@ -1,37 +1,45 @@
 let chart = null;
 let allWeights = [];
-let isShowingAllHistory = false;
 
 const MOBILE_BREAKPOINT = 600;
-const HISTORY_LIMIT = 30;
+const DEFAULT_HISTORY_DAYS = 30;
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+let historyDays = DEFAULT_HISTORY_DAYS;
 
 function isMobileViewport() {
     return window.innerWidth <= MOBILE_BREAKPOINT;
 }
 
+function getUtcCalendarTimestamp(recordedAt) {
+    const date = new Date(recordedAt);
+    return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
 function getDisplayWeights() {
-    if (isShowingAllHistory || allWeights.length <= HISTORY_LIMIT) {
+    if (allWeights.length === 0) {
         return allWeights;
     }
-    return allWeights.slice(-HISTORY_LIMIT);
+
+    const newestDay = getUtcCalendarTimestamp(allWeights[allWeights.length - 1].recorded_at);
+    const cutoffDay = newestDay - (historyDays - 1) * MILLISECONDS_PER_DAY;
+    return allWeights.filter(weight => getUtcCalendarTimestamp(weight.recorded_at) >= cutoffDay);
 }
 
-function updateHistoryToggle() {
-    const toggle = document.getElementById('history-toggle');
-    if (!toggle) return;
+function updateChartSummary(latestEma) {
+    const summary = document.getElementById('chart-summary');
+    const estimate = document.getElementById('estimated-weight');
 
-    if (allWeights.length > HISTORY_LIMIT) {
-        toggle.style.display = 'inline-block';
-        toggle.textContent = isShowingAllHistory
-            ? 'Show Recent 30 Days'
-            : 'Show Full History';
-    } else {
-        toggle.style.display = 'none';
-    }
+    if (summary) summary.style.display = allWeights.length > 0 ? 'flex' : 'none';
+    if (estimate) estimate.textContent = latestEma.toFixed(1);
 }
 
-function toggleHistory() {
-    isShowingAllHistory = !isShowingAllHistory;
+function applyHistoryRange(event) {
+    event.preventDefault();
+    const input = document.getElementById('history-days');
+
+    if (!input.reportValidity()) return;
+
+    historyDays = input.valueAsNumber;
     renderChart();
 }
 
@@ -52,7 +60,7 @@ function renderChart() {
     const weights = getDisplayWeights();
     const emptyState = document.getElementById('chart-empty-state');
     const canvas = document.getElementById('weightChart');
-    const toggle = document.getElementById('history-toggle');
+    const summary = document.getElementById('chart-summary');
 
     if (!weights || weights.length === 0) {
         if (chart) {
@@ -61,7 +69,7 @@ function renderChart() {
         }
         if (emptyState) emptyState.style.display = 'block';
         if (canvas) canvas.style.display = 'none';
-        if (toggle) toggle.style.display = 'none';
+        if (summary) summary.style.display = 'none';
         return;
     }
 
@@ -74,10 +82,8 @@ function renderChart() {
     const labels = weights.map(w => new Date(w.recorded_at).toLocaleDateString());
     const data = weights.map(w => w.weight);
     
-    let emaData = allEmaData;
-    if (!isShowingAllHistory && allWeights.length > HISTORY_LIMIT) {
-        emaData = allEmaData.slice(-HISTORY_LIMIT);
-    }
+    const firstDisplayedIndex = allWeights.indexOf(weights[0]);
+    const emaData = allEmaData.slice(firstDisplayedIndex);
 
     const ctx = document.getElementById('weightChart').getContext('2d');
 
@@ -151,7 +157,7 @@ function renderChart() {
         }
     });
 
-    updateHistoryToggle();
+    updateChartSummary(allEmaData[allEmaData.length - 1]);
 }
 
 async function loadChart() {
