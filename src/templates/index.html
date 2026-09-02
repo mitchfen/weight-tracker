@@ -33,7 +33,23 @@
         </div>
 
         <div class="bg-slate-50 p-5 sm:p-6 rounded-lg min-h-[280px] sm:min-h-[300px] flex flex-col justify-center">
-            <button id="history-toggle" class="btn-secondary self-end sm:self-end mb-3" type="button" onclick="toggleHistory()" style="display:none;"></button>
+            <div id="chart-summary" class="chart-summary mb-4" style="display:none;">
+                <div class="estimated-weight">
+                    <span class="text-slate-500 text-xs font-semibold uppercase tracking-wide">Estimated real weight</span>
+                    <div>
+                        <strong id="estimated-weight" class="text-2xl text-slate-800"></strong>
+                        <span class="text-slate-600 font-semibold">lbs</span>
+                        <span class="text-slate-400 text-xs">(7-day EMA)</span>
+                    </div>
+                </div>
+                <form id="history-controls" class="history-controls" onsubmit="applyHistoryRange(event)">
+                    <label for="history-days" class="text-slate-600 font-semibold text-sm">Show last</label>
+                    <input type="number" id="history-days" value="30" min="1" step="1" required
+                        class="w-20 px-2 py-2 border-2 border-slate-300 rounded-md text-sm focus:outline-none focus:border-slate-500 transition-colors">
+                    <span class="text-slate-600 font-semibold text-sm">days</span>
+                    <button class="btn-secondary" type="submit">Apply</button>
+                </form>
+            </div>
             <div id="chart-empty-state" class="loading" style="display:none;">No weight data yet. Record your first weight!</div>
             <canvas id="weightChart"></canvas>
         </div>

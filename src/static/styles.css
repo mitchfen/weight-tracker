@@ -9,10 +9,26 @@ canvas {
         max-height: 250px;
     }
 
-    #history-toggle {
+    .chart-summary {
         align-self: stretch;
-        text-align: center;
+        align-items: stretch;
+        flex-direction: column;
     }
+
+    .history-controls {
+        justify-content: space-between;
+    }
+}
+
+.chart-summary {
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.history-controls {
+    align-items: center;
+    gap: 8px;
 }
 
 .message {
